@@ -1,5 +1,5 @@
 import express, { NextFunction, Request, Response } from "express";
-import { config } from "./config";
+import { config } from "./config.js";
 
 const app = express();
 const PORT = 8080;
@@ -33,12 +33,13 @@ const handlerGetMetrics = async (_req: Request, res: Response) => {
   res.status(200).send(`Hits: ${config.fileserverHits}`);
 };
 
-const handlerResetMetrics = async (_req: Request, _res: Response) => {
+const handlerResetMetrics = async (_req: Request, res: Response) => {
   config.fileserverHits = 0;
+  res.status(200).send("OK");
 };
 
-app.use(middlewareLogResponses, middlewareMetricsInc);
-app.use("/app", express.static("./src/app"));
+app.use(middlewareLogResponses);
+app.use("/app", middlewareMetricsInc, express.static("./src/app"));
 
 const handlerReadiness = async (req: Request, res: Response): Promise<void> => {
   res.set("Content-Type", "text");
@@ -48,6 +49,7 @@ const handlerReadiness = async (req: Request, res: Response): Promise<void> => {
 app.get("/healthz", handlerReadiness);
 app.get("/metrics", handlerGetMetrics);
 app.get("/reset", handlerResetMetrics);
+app.get("/app", middlewareMetricsInc);
 
 app.listen(PORT, () => {
   console.log(`Server is running at http://localhost:${PORT}`);
