@@ -28,28 +28,28 @@ const handlerChirp = async (req: Request, res: Response) => {
     body: string;
   };
 
-  let body = "";
-  req.setEncoding("utf8");
-  req.on("data", (chunk: string) => {
-    body += chunk;
-  });
+  const profaneWords = ["kerfuffle", "sharbert", "fornax"];
 
-  req.on("end", () => {
-    try {
-      const chirp: Chirp = JSON.parse(body);
+  try {
+    const chirp: Chirp = req.body;
 
-      if (chirp.body.length > 140) {
-        res.status(400).send({ error: "Chirp is too long" });
-      }
-      res.status(200).send({ valid: true });
-    } catch (err) {
-      res.status(400).send({ error: "Something went wrong" });
+    if (chirp.body.length > 140) {
+      res.status(400).send({ error: "Chirp is too long" });
     }
-  });
 
-  req.on("error", (err) => {
-    res.status(500).send({ error: "Something went wrong" });
-  });
+    const words = chirp.body.split(" ");
+
+    for (let i = 0; i < words.length; i++) {
+      const word = words[i].toLowerCase();
+      if (profaneWords.includes(word)) {
+        words[i] = "****";
+      }
+    }
+
+    res.status(200).send({ cleanedBody: words.join(" ") });
+  } catch (err) {
+    res.status(400).send({ error: "Something went wrong" });
+  }
 };
 
 export {
