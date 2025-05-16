@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { config } from "./config.js";
+import { BadRequestError } from "./app/customError.js";
 
 const handlerGetMetrics = async (_req: Request, res: Response) => {
   res.set("Content-Type", "text/html; charset=utf-8");
@@ -38,7 +39,7 @@ const handlerChirp = async (
     const chirp: Chirp = req.body;
 
     if (chirp.body.length > 140) {
-      throw new Error("Something went wrong on our end");
+      throw new BadRequestError("Chirp is too long. Max length is 140");
     }
 
     const words = chirp.body.split(" ");
@@ -63,7 +64,10 @@ const errorHandler = (
   next: NextFunction,
 ) => {
   console.error(err);
-  res.status(500).json({ error: "Something went wrong on our end" });
+
+  if (err instanceof BadRequestError) {
+    res.status(400).send({ error: err.message });
+  }
 };
 
 export {
