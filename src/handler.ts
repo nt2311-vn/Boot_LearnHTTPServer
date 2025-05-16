@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { config } from "./config.js";
 
 const handlerGetMetrics = async (_req: Request, res: Response) => {
@@ -23,7 +23,11 @@ const handlerReadiness = async (req: Request, res: Response): Promise<void> => {
   res.status(200).send("OK");
 };
 
-const handlerChirp = async (req: Request, res: Response) => {
+const handlerChirp = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   type Chirp = {
     body: string;
   };
@@ -34,7 +38,7 @@ const handlerChirp = async (req: Request, res: Response) => {
     const chirp: Chirp = req.body;
 
     if (chirp.body.length > 140) {
-      res.status(400).send({ error: "Chirp is too long" });
+      throw new Error("Something went wrong on our end");
     }
 
     const words = chirp.body.split(" ");
@@ -48,8 +52,18 @@ const handlerChirp = async (req: Request, res: Response) => {
 
     res.status(200).send({ cleanedBody: words.join(" ") });
   } catch (err) {
-    res.status(400).send({ error: "Something went wrong" });
+    next(err);
   }
+};
+
+const errorHandler = (
+  err: Error,
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  console.error(err);
+  res.status(500).json({ error: "Something went wrong on our end" });
 };
 
 export {
@@ -57,4 +71,5 @@ export {
   handlerReadiness,
   handlerGetMetrics,
   handlerChirp,
+  errorHandler,
 };
