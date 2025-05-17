@@ -15,7 +15,7 @@
   "devDependencies": {
     "@types/express": "^5.0.1",
     "@types/node": "^22.15.17",
-    "drizzle-kit": "^0.18.1",
+    "drizzle-kit": "^0.31.1",
     "typescript": "^5.8.3"
   },
   "dependencies": {
