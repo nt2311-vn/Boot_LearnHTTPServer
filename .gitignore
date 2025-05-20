@@ -3,3 +3,4 @@ node_modules/
 dist/
 server.log
 drizzle.config.ts
+docker-compose.yml
