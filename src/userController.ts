@@ -1,6 +1,6 @@
-import { createUser } from "./db/queries/users";
+import { createUser } from "./db/queries/users.js";
 import { NextFunction, Request, Response } from "express";
-import { BadRequestError } from "./app/customError";
+import { BadRequestError } from "./app/customError.js";
 
 const createUserHandler = async (req: Request, res: Response) => {
   type parameters = {
