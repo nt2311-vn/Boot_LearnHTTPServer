@@ -10,3 +10,17 @@ export const createChirp = async (chirp: NewChirp) => {
 
   return result;
 };
+
+export const retrieveChirps = async () => {
+  const results = await db
+    .select({
+      id: chirps.id,
+      createdAt: chirps.createdAt,
+      updatedAt: chirps.updatedAt,
+      body: chirps.body,
+      userId: chirps.userId,
+    })
+    .from(chirps);
+
+  return results;
+};
