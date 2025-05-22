@@ -1,5 +1,7 @@
 import bcrypt from "bcrypt";
 
+import jwt from "jsonwebtoken";
+
 import { Request, Response } from "express";
 import {
   BadRequestError,
@@ -7,6 +9,7 @@ import {
   UnauthorizedError,
 } from "./app/customError.js";
 import { findUserByEmail } from "./db/queries/users.js";
+import { JwtPayload } from "jsonwebtoken";
 
 export const hashPassword = async (password: string): Promise<string> => {
   return await bcrypt.hash(password, 10);
@@ -63,4 +66,34 @@ export const login = async (req: Request, res: Response) => {
   };
 
   res.status(200).json(publicUser);
+};
+
+type payload = Pick<JwtPayload, "iss" | "sub" | "iat" | "exp">;
+
+export const makeJWT = (
+  userID: string,
+  expiresIn: number,
+  secret: string,
+): string => {
+  const currentTimeInSecs = Math.floor(Date.now() / 1000);
+  const chirpPayload: payload = {
+    iss: "chirpy",
+    sub: userID,
+    iat: currentTimeInSecs,
+    exp: currentTimeInSecs + expiresIn,
+  };
+  return jwt.sign(chirpPayload, secret);
+};
+
+export const validateJWT = (tokenString: string, secret: string): string => {
+  try {
+    const extractPayload = jwt.verify(tokenString, secret);
+    if (typeof extractPayload === "string") {
+      throw new UnauthorizedError("not validate JWT");
+    }
+
+    return extractPayload.sub!;
+  } catch (err) {
+    throw new UnauthorizedError("not validate JWT");
+  }
 };
