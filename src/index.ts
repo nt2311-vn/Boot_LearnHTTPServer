@@ -20,6 +20,7 @@ import {
   getChirpByIdHandler,
   getChirpsHandler,
 } from "./chirpController.js";
+import { login } from "./auth.js";
 
 const migrationClient = postgres(config.db.url, { max: 1 });
 await migrate(drizzle(migrationClient), config.db.migrationConfig);
@@ -44,6 +45,9 @@ app.get("/api/chirps", (req, res, next) => {
 });
 app.get("/api/chirps/:chirpID", (req, res, next) => {
   Promise.resolve(getChirpByIdHandler(req, res)).catch(next);
+});
+app.post("/api/login", (req, res, next) => {
+  Promise.resolve(login(req, res)).catch(next);
 });
 
 app.listen(config.api.port, () => {
