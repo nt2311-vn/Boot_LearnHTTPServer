@@ -29,6 +29,9 @@ export const chirps = pgTable(
       .$onUpdate(() => new Date()),
     body: varchar("body", { length: 140 }).notNull(),
     userId: uuid("user_id").notNull(),
+    hashed_password: varchar("hashed_password", { length: 256 })
+      .notNull()
+      .default("unset"),
   },
   (table) => ({
     userFk: foreignKey({
