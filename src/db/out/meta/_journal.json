@@ -22,6 +22,13 @@
       "when": 1747919249342,
       "tag": "0002_strong_saracen",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1747922105616,
+      "tag": "0003_pink_nova",
+      "breakpoints": true
     }
   ]
 }
