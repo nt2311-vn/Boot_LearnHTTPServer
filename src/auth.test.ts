@@ -28,13 +28,14 @@ describe("Password Hashing", () => {
 });
 
 describe("JWT Functions", () => {
-  const secret = "secret";
+  const secret = envOrThrow("SECRET");
   const wrongSecret = "wrong_secret";
   const userID = "some-unique-user-id";
   let validToken: string;
 
   beforeAll(() => {
     validToken = makeJWT(userID, 3600, secret);
+    console.log(validToken);
   });
 
   it("should validate a valid token", () => {

@@ -9,6 +9,7 @@ import {
 } from "./app/customError.js";
 import { findUserByEmail } from "./db/queries/users.js";
 import { JwtPayload } from "jsonwebtoken";
+import { envOrThrow } from "./config.js";
 
 export const hashPassword = async (password: string): Promise<string> => {
   return await bcrypt.hash(password, 10);
@@ -25,6 +26,7 @@ export const login = async (req: Request, res: Response) => {
   type LoginInput = {
     email: string;
     password: string;
+    expiresInSeconds?: number;
   };
 
   type DatabaseUser = {
@@ -33,6 +35,7 @@ export const login = async (req: Request, res: Response) => {
     createdAt: Date;
     email: string;
     hashed_password: string;
+    token: string;
   };
 
   const loginInput: LoginInput = req.body;
@@ -56,12 +59,16 @@ export const login = async (req: Request, res: Response) => {
     return;
   }
 
+  const expiresIn = Math.min(loginInput.expiresInSeconds ?? 3600, 3600);
+  const jwtToken = makeJWT(user.id, expiresIn, envOrThrow("SECRET"));
+
   type PublicUserResp = Omit<DatabaseUser, "hashed_password">;
   const publicUser: PublicUserResp = {
     id: user.id,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
     email: user.email,
+    token: jwtToken,
   };
 
   res.status(200).json(publicUser);
