@@ -1,11 +1,14 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import {
   checkPasswordHash,
+  getBearerToken,
   hashPassword,
   makeJWT,
   validateJWT,
 } from "./auth.js";
 import { UnauthorizedError } from "./app/customError.js";
+import { Request } from "express";
+import { envOrThrow } from "./config.js";
 
 describe("Password Hashing", () => {
   const password1 = "correctPassword123!";
@@ -49,5 +52,39 @@ describe("JWT Functions", () => {
     expect(() => validateJWT(validToken, wrongSecret)).toThrow(
       UnauthorizedError,
     );
+  });
+});
+
+describe("Get bearer token", () => {
+  it("should throw an error for invalid authorization header format", () => {
+    const req = {
+      headers: { authorization: "InvalidToken" },
+      get: (header: string) => "InvalidToken",
+    } as Request;
+    expect(() => getBearerToken(req)).toThrow(UnauthorizedError);
+    expect(() => getBearerToken(req)).toThrow(
+      "Invalid authorization header format",
+    );
+  });
+
+  it("should throw an error for non-Bearer authorization header", () => {
+    const req = {
+      headers: { authorization: "Basic token" },
+      get: (header: string) => "Basic token",
+    } as Request;
+    expect(() => getBearerToken(req)).toThrow(UnauthorizedError);
+    expect(() => getBearerToken(req)).toThrow(
+      "Invalid authorization header format",
+    );
+  });
+
+  it("should return token for valid Bearer authorization header", () => {
+    const token = envOrThrow("SECRET");
+    const req = {
+      headers: { authorization: `Bearer ${token}` },
+      get: (header: string) => `Bearer ${token}`,
+    } as Request;
+    const result = getBearerToken(req);
+    expect(result).toBe(token);
   });
 });

@@ -97,10 +97,16 @@ export const validateJWT = (tokenString: string, secret: string): string => {
   }
 };
 
-export const getBearerToken = (req: Request): string => {
-  const token = req.get("Authorization");
-  if (!token) {
-    throw new UnauthorizedError("no authorized token in header");
+export function getBearerToken(req: Request): string {
+  const authHeader = req.get("Authorization");
+  if (!authHeader) {
+    throw new UnauthorizedError("No authorization header provided");
   }
-  return token.split(" ")[1];
-};
+
+  const parts = authHeader.split(" ");
+  if (parts.length !== 2 || parts[0].toLowerCase() !== "bearer") {
+    throw new UnauthorizedError("Invalid authorization header format");
+  }
+
+  return parts[1];
+}
