@@ -1,5 +1,9 @@
 import express from "express";
-import { middlewareLogResponses, middlewareMetricsInc } from "./middleware.js";
+import {
+  authenticateJWT,
+  middlewareLogResponses,
+  middlewareMetricsInc,
+} from "./middleware.js";
 import {
   handlerGetMetrics,
   handlerReadiness,
@@ -20,7 +24,7 @@ import {
   getChirpByIdHandler,
   getChirpsHandler,
 } from "./chirpController.js";
-import { login } from "./auth.js";
+import { getBearerToken, login } from "./auth.js";
 
 const migrationClient = postgres(config.db.url, { max: 1 });
 await migrate(drizzle(migrationClient), config.db.migrationConfig);
@@ -37,7 +41,7 @@ app.post("/admin/reset", handlerResetMetrics);
 app.post("/api/users", (req, res, next) => {
   Promise.resolve(createUserHandler(req, res)).catch(next);
 });
-app.post("/api/chirps", (req, res, next) => {
+app.post("/api/chirps", authenticateJWT, (req, res, next) => {
   Promise.resolve(createChirpHandler(req, res)).catch(next);
 });
 app.get("/api/chirps", (req, res, next) => {

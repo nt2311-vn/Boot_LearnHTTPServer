@@ -1,24 +1,31 @@
 import { Request, Response } from "express";
-import { BadRequestError, NotFoundError } from "./app/customError.js";
+import {
+  BadRequestError,
+  NotFoundError,
+  UnauthorizedError,
+} from "./app/customError.js";
 import {
   createChirp,
   retrieveChirpById,
   retrieveChirps,
 } from "./db/queries/chirps.js";
+import { getBearerToken, validateJWT } from "./auth.js";
+import { envOrThrow } from "./config.js";
+import { AuthenticatedRequest } from "./middleware.js";
 
-export const createChirpHandler = async (req: Request, res: Response) => {
-  type ChirpRequest = {
-    body: string;
-    userId: string;
-  };
+export const createChirpHandler = async (
+  req: AuthenticatedRequest,
+  res: Response,
+) => {
+  const { body } = req.body;
 
-  const params: ChirpRequest = req.body;
-
-  if (!params.body || !params.userId) {
+  if (!body) {
     throw new BadRequestError("Missing required fields");
   }
-
-  const chirp = await createChirp({ userId: params.userId, body: params.body });
+  if (!req.userId) {
+    throw new UnauthorizedError("unauthorized to create chirp");
+  }
+  const chirp = await createChirp({ userId: req.userId, body });
 
   if (!chirp) {
     throw new Error("Cannot create chirp");

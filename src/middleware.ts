@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
-import { config } from "./config.js";
+import { config, envOrThrow } from "./config.js";
+import { getBearerToken, validateJWT } from "./auth.js";
 
 const middlewareMetricsInc = (
   req: Request,
@@ -26,4 +27,25 @@ const middlewareLogResponses = (
   next();
 };
 
-export { middlewareMetricsInc, middlewareLogResponses };
+export interface AuthenticatedRequest extends Request {
+  userId?: string;
+}
+
+const authenticateJWT = (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const token = getBearerToken(req);
+    const secret = envOrThrow("SECRET");
+
+    const userId = validateJWT(token, secret);
+    req.userId = userId;
+    next();
+  } catch (err) {
+    next(err);
+  }
+};
+
+export { middlewareMetricsInc, middlewareLogResponses, authenticateJWT };
