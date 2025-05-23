@@ -1,5 +1,4 @@
 import bcrypt from "bcrypt";
-
 import jwt from "jsonwebtoken";
 
 import { Request, Response } from "express";
@@ -96,4 +95,12 @@ export const validateJWT = (tokenString: string, secret: string): string => {
   } catch (err) {
     throw new UnauthorizedError("not validate JWT");
   }
+};
+
+export const getBearerToken = (req: Request): string => {
+  const token = req.get("Authorization");
+  if (!token) {
+    throw new UnauthorizedError("no authorized token in header");
+  }
+  return token.split(" ")[1];
 };
