@@ -31,13 +31,16 @@ export async function findUserByEmail(email: string) {
   return user;
 }
 
-export const updateUser = async (email: string, hashedPassword: string) => {
-  const rows = await db
+export const updateUser = async (
+  id: string,
+  email: string,
+  hashedPassword: string,
+) => {
+  const [user] = await db
     .update(users)
     .set({ email: email, hashed_password: hashedPassword })
+    .where(eq(users.id, id))
     .returning();
 
-  if (rows.length === 0) {
-    throw new Error("cannot update user info");
-  }
+  return user;
 };
