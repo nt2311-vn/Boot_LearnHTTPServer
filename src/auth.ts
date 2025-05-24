@@ -11,7 +11,11 @@ import {
 import { findUserByEmail } from "./db/queries/users.js";
 import { JwtPayload } from "jsonwebtoken";
 import { envOrThrow } from "./config.js";
-import { createRefreshToken } from "./db/queries/refreshTokens.js";
+import {
+  createRefreshToken,
+  isValidToken,
+  updateRevokeToken,
+} from "./db/queries/refreshTokens.js";
 
 export const hashPassword = async (password: string): Promise<string> => {
   return await bcrypt.hash(password, 10);
@@ -134,4 +138,28 @@ export const getBearerToken = (req: Request): string => {
 
 export const makeRefreshToken = () => {
   return randomBytes(32).toString("hex");
+};
+
+export const postRefreshToken = async (req: Request, res: Response) => {
+  const token = getBearerToken(req);
+  const isValid = await isValidToken(token);
+
+  if (!isValid) {
+    res.status(401).send("Not validate token");
+    return;
+  }
+
+  res.status(200).json({ token });
+};
+
+export const revokeToken = async (req: Request, res: Response) => {
+  const token = getBearerToken(req);
+  const isValid = await isValidToken(token);
+
+  if (!isValid) {
+    res.status(401).send("Not validate token");
+    return;
+  }
+
+  await updateRevokeToken(token);
 };
