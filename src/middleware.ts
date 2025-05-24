@@ -29,6 +29,7 @@ const middlewareLogResponses = (
 
 export interface AuthenticatedRequest extends Request {
   userId?: string;
+  refresh_token?: string;
 }
 
 const authenticateJWT = (

@@ -16,6 +16,7 @@ import {
   isValidToken,
   updateRevokeToken,
 } from "./db/queries/refreshTokens.js";
+import { AuthenticatedRequest } from "./middleware.js";
 
 export const hashPassword = async (password: string): Promise<string> => {
   return await bcrypt.hash(password, 10);
@@ -140,8 +141,14 @@ export const makeRefreshToken = () => {
   return randomBytes(32).toString("hex");
 };
 
-export const postRefreshToken = async (req: Request, res: Response) => {
-  const token = getBearerToken(req);
+export const postRefreshToken = async (
+  req: AuthenticatedRequest,
+  res: Response,
+) => {
+  if (!req.userId) {
+    res.status(401).send("Not validate token");
+    return;
+  }
   const isValid = await isValidToken(token);
 
   if (!isValid) {
@@ -152,7 +159,7 @@ export const postRefreshToken = async (req: Request, res: Response) => {
   res.status(200).json({ token });
 };
 
-export const revokeToken = async (req: Request, res: Response) => {
+export const revokeToken = async (req: AuthenticatedRequest, res: Response) => {
   const token = getBearerToken(req);
   const isValid = await isValidToken(token);
 
@@ -162,4 +169,5 @@ export const revokeToken = async (req: Request, res: Response) => {
   }
 
   await updateRevokeToken(token);
+  res.status(204).send();
 };

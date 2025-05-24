@@ -31,5 +31,6 @@ export const updateRevokeToken = async (token: string) => {
   await db
     .update(refresh_tokens)
     .set({ revokedAt: new Date() })
-    .where(eq(refresh_tokens.token, token));
+    .where(eq(refresh_tokens.token, token))
+    .returning();
 };

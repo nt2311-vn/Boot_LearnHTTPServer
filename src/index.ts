@@ -59,11 +59,11 @@ app.post("/api/login", (req, res, next) => {
   Promise.resolve(login(req, res)).catch(next);
 });
 
-app.post("/api/refresh", (req, res, next) => {
+app.post("/api/refresh", authenticateJWT, (req, res, next) => {
   Promise.resolve(postRefreshToken(req, res)).catch(next);
 });
 
-app.post("/api/revoke", (req, res, next) => {
+app.post("/api/revoke", authenticateJWT, (req, res, next) => {
   Promise.resolve(revokeToken(req, res)).catch(next);
 });
 
