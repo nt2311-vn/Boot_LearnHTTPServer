@@ -1,5 +1,6 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { randomBytes } from "crypto";
 
 import { Request, Response } from "express";
 import {
@@ -104,7 +105,7 @@ export const validateJWT = (tokenString: string, secret: string): string => {
   }
 };
 
-export function getBearerToken(req: Request): string {
+export const getBearerToken = (req: Request): string => {
   const authHeader = req.get("Authorization");
   if (!authHeader) {
     throw new UnauthorizedError("No authorization header provided");
@@ -116,4 +117,8 @@ export function getBearerToken(req: Request): string {
   }
 
   return parts[1];
-}
+};
+
+export const makeRefreshToken = () => {
+  return randomBytes(32).toString();
+};
