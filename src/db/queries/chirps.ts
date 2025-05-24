@@ -40,3 +40,7 @@ export const retrieveChirpById = async (chirpID: string) => {
 
   return result;
 };
+
+export const deleteChirp = async (chirpID: string) => {
+  await db.delete(chirps).where(eq(chirps.id, chirpID));
+};

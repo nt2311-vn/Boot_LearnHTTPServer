@@ -6,6 +6,7 @@ import {
 } from "./app/customError.js";
 import {
   createChirp,
+  deleteChirp,
   retrieveChirpById,
   retrieveChirps,
 } from "./db/queries/chirps.js";
@@ -55,4 +56,28 @@ export const getChirpByIdHandler = async (req: Request, res: Response) => {
   }
 
   res.status(200).json(chirp);
+};
+
+export const deleteChirpHandler = async (req: Request, res: Response) => {
+  const chirpID = req.params.chirpID;
+  if (!chirpID) {
+    throw new BadRequestError("Missing chirp id");
+  }
+
+  const token = getBearerToken(req);
+  const userId = validateJWT(token, envOrThrow("SECRET"));
+  const chirp = await retrieveChirpById(chirpID);
+
+  if (!chirp) {
+    res.status(404).send("Not found any chirp");
+    return;
+  }
+
+  if (chirp.userId !== userId) {
+    res.status(403).send("unauthorized request");
+    return;
+  }
+
+  await deleteChirp(chirpID);
+  res.status(204).send("ok");
 };
