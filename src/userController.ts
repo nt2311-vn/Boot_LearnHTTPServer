@@ -3,6 +3,8 @@ import { NextFunction, Request, Response } from "express";
 import { BadRequestError } from "./app/customError.js";
 import { getBearerToken, hashPassword, validateJWT } from "./auth.js";
 import { envOrThrow } from "./config.js";
+import { isValidToken } from "./db/queries/refreshTokens.js";
+import { access } from "fs";
 
 const createUserHandler = async (req: Request, res: Response) => {
   type parameters = {
@@ -40,18 +42,18 @@ export const updateUserHandler = async (req: Request, res: Response) => {
     res.status(401).send("Missing required fields");
     return;
   }
-
   try {
     const accessToken = getBearerToken(req);
-    const userId = validateJWT(accessToken, envOrThrow("SECRET"));
-    const user = await findUserByEmail(params.email);
-
-    if (user.id !== userId) {
-      res.status(401).send("Unauthorized user");
-    }
+    const subject = validateJWT(accessToken, envOrThrow("SECRET"));
 
     const hashedPass = await hashPassword(params.password);
-    await updateUser(params.email, hashedPass);
+    const updatedUser = await updateUser(subject, params.email, hashedPass);
+    res.status(200).json({
+      id: updatedUser.id,
+      createdAt: updatedUser.createdAt,
+      updatedAt: updatedUser.createdAt,
+      email: updatedUser.email,
+    });
   } catch (err) {
     res.status(401).send("Cannot update user password and email");
   }
