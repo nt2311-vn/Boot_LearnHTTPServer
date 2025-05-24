@@ -11,6 +11,7 @@ import {
 import { findUserByEmail } from "./db/queries/users.js";
 import { JwtPayload } from "jsonwebtoken";
 import { envOrThrow } from "./config.js";
+import { createRefreshToken } from "./db/queries/refreshTokens.js";
 
 export const hashPassword = async (password: string): Promise<string> => {
   return await bcrypt.hash(password, 10);
@@ -27,7 +28,6 @@ export const login = async (req: Request, res: Response) => {
   type LoginInput = {
     email: string;
     password: string;
-    expiresInSeconds?: number;
   };
 
   type DatabaseUser = {
@@ -37,6 +37,7 @@ export const login = async (req: Request, res: Response) => {
     email: string;
     hashed_password: string;
     token: string;
+    refreshToken: string;
   };
 
   const loginInput: LoginInput = req.body;
@@ -60,8 +61,19 @@ export const login = async (req: Request, res: Response) => {
     return;
   }
 
-  const expiresIn = Math.min(loginInput.expiresInSeconds ?? 3600, 3600);
+  const expiresIn = 3600;
   const jwtToken = makeJWT(user.id, expiresIn, envOrThrow("SECRET"));
+
+  const token = makeRefreshToken();
+  const savedRefreshToken = await createRefreshToken({
+    userId: user.id,
+    token: token,
+    revokedAt: null,
+  });
+
+  if (!savedRefreshToken) {
+    throw new Error("Cannot create refresh token");
+  }
 
   type PublicUserResp = Omit<DatabaseUser, "hashed_password">;
   const publicUser: PublicUserResp = {
@@ -70,6 +82,7 @@ export const login = async (req: Request, res: Response) => {
     updatedAt: user.updatedAt,
     email: user.email,
     token: jwtToken,
+    refreshToken: savedRefreshToken.token,
   };
 
   res.status(200).json(publicUser);
@@ -120,5 +133,5 @@ export const getBearerToken = (req: Request): string => {
 };
 
 export const makeRefreshToken = () => {
-  return randomBytes(32).toString();
+  return randomBytes(32).toString("hex");
 };
