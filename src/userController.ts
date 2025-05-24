@@ -29,7 +29,7 @@ const createUserHandler = async (req: Request, res: Response) => {
   res.status(201).json(user);
 };
 
-const updateUserHandler = async (req: Request, res: Response) => {
+export const updateUserHandler = async (req: Request, res: Response) => {
   type parameters = {
     email: string;
     password: string;

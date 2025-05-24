@@ -14,7 +14,7 @@ import { config } from "./config.js";
 import postgres from "postgres";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 import { drizzle } from "drizzle-orm/postgres-js";
-import { createUserHandler } from "./userController.js";
+import { createUserHandler, updateUserHandler } from "./userController.js";
 import {
   createChirpHandler,
   getChirpByIdHandler,
@@ -41,6 +41,9 @@ app.post("/admin/reset", handlerResetMetrics);
 // app.post("/api/validate_chirp", handlerChirp, errorHandler);
 app.post("/api/users", (req, res, next) => {
   Promise.resolve(createUserHandler(req, res)).catch(next);
+});
+app.put("/api/users", (req, res, next) => {
+  Promise.resolve(updateUserHandler(req, res).catch(next));
 });
 app.post("/api/chirps", (req, res, next) => {
   Promise.resolve(createChirpHandler(req, res)).catch(next);
