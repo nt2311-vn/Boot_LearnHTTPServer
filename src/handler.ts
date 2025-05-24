@@ -1,6 +1,11 @@
 import { NextFunction, Request, Response } from "express";
 import { config } from "./config.js";
-import { BadRequestError, ForbiddenError } from "./app/customError.js";
+import {
+  BadRequestError,
+  ForbiddenError,
+  NotFoundError,
+  UnauthorizedError,
+} from "./app/customError.js";
 import { reset } from "./db/queries/users.js";
 
 const handlerGetMetrics = async (_: Request, res: Response) => {
@@ -72,6 +77,12 @@ const errorHandler = (
 
   if (err instanceof BadRequestError) {
     res.status(400).send({ error: err.message });
+  } else if (err instanceof UnauthorizedError) {
+    res.status(401).send({ error: err.message });
+  } else if (err instanceof ForbiddenError) {
+    res.status(403).send({ error: err.message });
+  } else if (err instanceof NotFoundError) {
+    res.status(404).send({ error: err.message });
   }
 };
 

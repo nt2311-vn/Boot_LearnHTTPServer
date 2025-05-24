@@ -46,13 +46,14 @@ export const getChirpByIdHandler = async (req: Request, res: Response) => {
   const chirpID = req.params.chirpID;
 
   if (!chirpID) {
-    throw new BadRequestError("Missing chirp id to retrieve");
+    res.status(401).send("missing required params");
+    return;
   }
 
   const chirp = await retrieveChirpById(chirpID);
-
   if (!chirp) {
-    throw new NotFoundError(`Cannot find chirp with id ${chirpID}`);
+    res.status(404).send("Not found");
+    return;
   }
 
   res.status(200).json(chirp);
@@ -64,20 +65,24 @@ export const deleteChirpHandler = async (req: Request, res: Response) => {
     throw new BadRequestError("Missing chirp id");
   }
 
-  const token = getBearerToken(req);
-  const userId = validateJWT(token, envOrThrow("SECRET"));
-  const chirp = await retrieveChirpById(chirpID);
+  try {
+    const token = getBearerToken(req);
+    const userId = validateJWT(token, envOrThrow("SECRET"));
+    const chirp = await retrieveChirpById(chirpID);
 
-  if (!chirp) {
-    res.status(404).send("Not found any chirp");
-    return;
+    if (!chirp) {
+      res.status(404).send("Not found any chirp");
+      return;
+    }
+
+    if (chirp.userId !== userId) {
+      res.status(403).send("unauthorized request");
+      return;
+    }
+
+    await deleteChirp(chirpID);
+    res.status(204).send("ok");
+  } catch (err) {
+    res.status(401).send("Unauthorized");
   }
-
-  if (chirp.userId !== userId) {
-    res.status(403).send("unauthorized request");
-    return;
-  }
-
-  await deleteChirp(chirpID);
-  res.status(204).send("ok");
 };
