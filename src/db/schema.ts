@@ -42,3 +42,21 @@ export const chirps = pgTable(
 );
 
 export type NewChirp = typeof chirps.$inferInsert;
+
+export const refresh_tokens = pgTable(
+  "refresh_tokens",
+  {
+    token: varchar("token", { length: 256 }).primaryKey(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+    userId: uuid("user_id").notNull(),
+    expiresAt: timestamp("expires_at").notNull(),
+    revokedAt: timestamp("revoked_at"),
+  },
+  (table) => ({
+    userFk: foreignKey({
+      columns: [table.userId],
+      foreignColumns: [users.id],
+    }).onDelete("cascade"),
+  }),
+);
