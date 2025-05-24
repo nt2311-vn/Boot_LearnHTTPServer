@@ -58,6 +58,11 @@ export const handlerLogin = async (req: Request, res: Response) => {
   }
 
   const accessToken = makeJWT(user.id, duration, envOrThrow("SECRET"));
+  const refreshToken = makeRefreshToken();
+  const saved = await createRefreshToken(user.id, refreshToken);
+  if (!saved) {
+    throw new UnauthorizedError("could not save refresh token");
+  }
 
   res.status(200).json({
     id: user.id,
@@ -65,6 +70,7 @@ export const handlerLogin = async (req: Request, res: Response) => {
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
     token: accessToken,
+    refreshToken: refreshToken,
   });
 };
 
@@ -86,16 +92,22 @@ export const makeJWT = (
 };
 
 export const validateJWT = (tokenString: string, secret: string): string => {
+  let decoded: payload;
   try {
-    const extractPayload = jwt.verify(tokenString, secret);
-    if (typeof extractPayload === "string") {
-      throw new UnauthorizedError("not validate JWT");
-    }
-
-    return extractPayload.sub!;
-  } catch (err) {
+    decoded = jwt.verify(tokenString, secret) as JwtPayload;
+  } catch (e) {
     throw new UnauthorizedError("not validate JWT");
   }
+
+  if (decoded.iss !== "chirpy") {
+    throw new UnauthorizedError("Invalid issuer");
+  }
+
+  if (!decoded.sub) {
+    throw new UnauthorizedError("No userid in token");
+  }
+
+  return decoded.sub;
 };
 
 export const getBearerToken = (req: Request): string => {

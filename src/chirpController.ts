@@ -21,19 +21,14 @@ export const createChirpHandler = async (req: Request, res: Response) => {
   }
 
   const token = getBearerToken(req);
-  const userId = validateJWT(token, envOrThrow("SECRET"));
-  if (!userId) {
-    res.status(401);
-    return;
+  try {
+    const userId = validateJWT(token, envOrThrow("SECRET"));
+    const chirp = await createChirp({ userId: userId, body });
+
+    res.status(201).json(chirp);
+  } catch (err) {
+    res.status(401).send("not authorized");
   }
-
-  const chirp = await createChirp({ userId: userId, body });
-
-  if (!chirp) {
-    throw new Error("Cannot create chirp");
-  }
-
-  res.status(201).json(chirp);
 };
 
 export const getChirpsHandler = async (_: Request, res: Response) => {

@@ -1,9 +1,17 @@
 import { and, eq, gt, isNull } from "drizzle-orm";
 import { db } from "../index.js";
-import { refresh_tokens, NewRefreshToken, users } from "../schema.js";
+import { refresh_tokens, users } from "../schema.js";
 
-export const createRefreshToken = async (token: NewRefreshToken) => {
-  const rows = await db.insert(refresh_tokens).values(token).returning();
+export const createRefreshToken = async (userID: string, token: string) => {
+  const rows = await db
+    .insert(refresh_tokens)
+    .values({
+      userId: userID,
+      token: token,
+      expiresAt: new Date(Date.now() + 60 * 60),
+      revokedAt: null,
+    })
+    .returning();
 
   return rows.length > 0;
 };
