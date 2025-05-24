@@ -116,33 +116,23 @@ export const makeRefreshToken = () => {
   return randomBytes(32).toString("hex");
 };
 
-export const postRefreshToken = async (
-  req: AuthenticatedRequest,
-  res: Response,
-) => {
-  if (!req.userId) {
-    res.status(401).send("Not validate token");
-    return;
-  }
-  const isValid = await isValidToken(token);
+export const postRefreshToken = async (req: Request, res: Response) => {
+  const token = getBearerToken(req);
+  const result = await isValidToken(token);
 
-  if (!isValid) {
+  if (!result) {
     res.status(401).send("Not validate token");
     return;
   }
 
-  res.status(200).json({ token });
+  const { user } = result;
+  const accessToken = makeJWT(user.id, 3600, envOrThrow("SECRET"));
+
+  res.status(200).json({ token: accessToken });
 };
 
-export const revokeToken = async (req: AuthenticatedRequest, res: Response) => {
+export const revokeToken = async (req: Request, res: Response) => {
   const token = getBearerToken(req);
-  const isValid = await isValidToken(token);
-
-  if (!isValid) {
-    res.status(401).send("Not validate token");
-    return;
-  }
-
   await updateRevokeToken(token);
   res.status(204).send();
 };

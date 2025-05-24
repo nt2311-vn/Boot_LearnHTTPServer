@@ -11,21 +11,23 @@ import {
 } from "./db/queries/chirps.js";
 import { getBearerToken, validateJWT } from "./auth.js";
 import { envOrThrow } from "./config.js";
-import { AuthenticatedRequest } from "./middleware.js";
+import { a } from "vitest/dist/chunks/suite.d.FvehnV49.js";
 
-export const createChirpHandler = async (
-  req: AuthenticatedRequest,
-  res: Response,
-) => {
+export const createChirpHandler = async (req: Request, res: Response) => {
   const { body } = req.body;
 
   if (!body) {
     throw new BadRequestError("Missing required fields");
   }
-  if (!req.userId) {
-    throw new UnauthorizedError("unauthorized to create chirp");
+
+  const token = getBearerToken(req);
+  const userId = validateJWT(token, envOrThrow("SECRET"));
+  if (!userId) {
+    res.status(401);
+    return;
   }
-  const chirp = await createChirp({ userId: req.userId, body });
+
+  const chirp = await createChirp({ userId: userId, body });
 
   if (!chirp) {
     throw new Error("Cannot create chirp");

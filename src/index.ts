@@ -1,9 +1,5 @@
 import express from "express";
-import {
-  authenticateJWT,
-  middlewareLogResponses,
-  middlewareMetricsInc,
-} from "./middleware.js";
+import { middlewareLogResponses, middlewareMetricsInc } from "./middleware.js";
 import {
   handlerGetMetrics,
   handlerReadiness,
@@ -26,7 +22,7 @@ import {
 } from "./chirpController.js";
 import {
   getBearerToken,
-  login,
+  handlerLogin,
   postRefreshToken,
   revokeToken,
 } from "./auth.js";
@@ -46,7 +42,7 @@ app.post("/admin/reset", handlerResetMetrics);
 app.post("/api/users", (req, res, next) => {
   Promise.resolve(createUserHandler(req, res)).catch(next);
 });
-app.post("/api/chirps", authenticateJWT, (req, res, next) => {
+app.post("/api/chirps", (req, res, next) => {
   Promise.resolve(createChirpHandler(req, res)).catch(next);
 });
 app.get("/api/chirps", (req, res, next) => {
@@ -56,14 +52,14 @@ app.get("/api/chirps/:chirpID", (req, res, next) => {
   Promise.resolve(getChirpByIdHandler(req, res)).catch(next);
 });
 app.post("/api/login", (req, res, next) => {
-  Promise.resolve(login(req, res)).catch(next);
+  Promise.resolve(handlerLogin(req, res)).catch(next);
 });
 
-app.post("/api/refresh", authenticateJWT, (req, res, next) => {
+app.post("/api/refresh", (req, res, next) => {
   Promise.resolve(postRefreshToken(req, res)).catch(next);
 });
 
-app.post("/api/revoke", authenticateJWT, (req, res, next) => {
+app.post("/api/revoke", (req, res, next) => {
   Promise.resolve(revokeToken(req, res)).catch(next);
 });
 

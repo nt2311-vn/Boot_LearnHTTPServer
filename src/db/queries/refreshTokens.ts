@@ -1,36 +1,38 @@
-import { eq } from "drizzle-orm";
+import { and, eq, gt, isNull } from "drizzle-orm";
 import { db } from "../index.js";
-import { refresh_tokens, NewRefreshToken } from "../schema.js";
+import { refresh_tokens, NewRefreshToken, users } from "../schema.js";
 
 export const createRefreshToken = async (token: NewRefreshToken) => {
-  const [refreshToken] = await db
-    .insert(refresh_tokens)
-    .values(token)
-    .onConflictDoNothing()
-    .returning();
+  const rows = await db.insert(refresh_tokens).values(token).returning();
 
-  return refreshToken;
+  return rows.length > 0;
 };
 
 export const isValidToken = async (token: string) => {
-  const [foundToken] = await db
-    .select({
-      token: refresh_tokens.token,
-      expiresIn: refresh_tokens.expiresAt,
-    })
-    .from(refresh_tokens)
-    .where(eq(refresh_tokens.token, token));
+  const [result] = await db
+    .select({ user: users })
+    .from(users)
+    .innerJoin(refresh_tokens, eq(users.id, refresh_tokens.userId))
+    .where(
+      and(
+        eq(refresh_tokens.token, token),
+        isNull(refresh_tokens.revokedAt),
+        gt(refresh_tokens.expiresAt, new Date()),
+      ),
+    )
+    .limit(1);
 
-  return (
-    foundToken.token === token &&
-    foundToken.expiresIn.getTime() > new Date().getTime()
-  );
+  return result;
 };
 
 export const updateRevokeToken = async (token: string) => {
-  await db
+  const rows = await db
     .update(refresh_tokens)
-    .set({ revokedAt: new Date() })
+    .set({ expiresAt: new Date() })
     .where(eq(refresh_tokens.token, token))
     .returning();
+
+  if (rows.length === 0) {
+    throw new Error("Couldn't revoke token");
+  }
 };
