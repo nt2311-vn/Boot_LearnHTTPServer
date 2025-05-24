@@ -16,7 +16,6 @@ import {
   isValidToken,
   updateRevokeToken,
 } from "./db/queries/refreshTokens.js";
-import { AuthenticatedRequest } from "./middleware.js";
 
 export const hashPassword = async (password: string): Promise<string> => {
   return await bcrypt.hash(password, 10);
@@ -29,68 +28,44 @@ export const checkPasswordHash = async (
   return await bcrypt.compare(password, hash);
 };
 
-export const login = async (req: Request, res: Response) => {
-  type LoginInput = {
-    email: string;
+export const handlerLogin = async (req: Request, res: Response) => {
+  type parameters = {
     password: string;
-  };
-
-  type DatabaseUser = {
-    id: string;
-    updatedAt: Date;
-    createdAt: Date;
     email: string;
-    hashed_password: string;
-    token: string;
-    refreshToken: string;
+    expiresIn?: number;
   };
 
-  const loginInput: LoginInput = req.body;
+  const params: parameters = req.body;
+  const user = await findUserByEmail(params.email);
 
-  if (!loginInput.password || !loginInput.email) {
-    throw new BadRequestError("Missing required fields on body");
-  }
-
-  const user = await findUserByEmail(loginInput.email);
   if (!user) {
-    throw new UnauthorizedError("incorrect email or password");
+    throw new UnauthorizedError("invalid username or password");
   }
 
-  const isAuthenticated = await checkPasswordHash(
-    loginInput.password,
+  const matching = await checkPasswordHash(
+    params.password,
     user.hashed_password,
   );
 
-  if (!isAuthenticated) {
-    res.status(401).send("incorrect email or password");
-    return;
+  if (!matching) {
+    throw new UnauthorizedError("invalid username or password");
   }
 
-  const expiresIn = 3600;
-  const jwtToken = makeJWT(user.id, expiresIn, envOrThrow("SECRET"));
+  let duration = 3600;
 
-  const token = makeRefreshToken();
-  const savedRefreshToken = await createRefreshToken({
-    userId: user.id,
-    token: token,
-    revokedAt: null,
-  });
-
-  if (!savedRefreshToken) {
-    throw new Error("Cannot create refresh token");
+  if (params.expiresIn && !(params.expiresIn > duration)) {
+    duration = params.expiresIn;
   }
 
-  type PublicUserResp = Omit<DatabaseUser, "hashed_password">;
-  const publicUser: PublicUserResp = {
+  const accessToken = makeJWT(user.id, duration, envOrThrow("SECRET"));
+
+  res.status(200).json({
     id: user.id,
+    email: user.email,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
-    email: user.email,
-    token: jwtToken,
-    refreshToken: savedRefreshToken.token,
-  };
-
-  res.status(200).json(publicUser);
+    token: accessToken,
+  });
 };
 
 type payload = Pick<JwtPayload, "iss" | "sub" | "iat" | "exp">;

@@ -27,26 +27,4 @@ const middlewareLogResponses = (
   next();
 };
 
-export interface AuthenticatedRequest extends Request {
-  userId?: string;
-  refresh_token?: string;
-}
-
-const authenticateJWT = (
-  req: AuthenticatedRequest,
-  res: Response,
-  next: NextFunction,
-) => {
-  try {
-    const token = getBearerToken(req);
-    const secret = envOrThrow("SECRET");
-
-    const userId = validateJWT(token, secret);
-    req.userId = userId;
-    next();
-  } catch (err) {
-    next(err);
-  }
-};
-
-export { middlewareMetricsInc, middlewareLogResponses, authenticateJWT };
+export { middlewareMetricsInc, middlewareLogResponses };
