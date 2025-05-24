@@ -1,4 +1,4 @@
-import { createUser, findUserByEmail } from "./db/queries/users.js";
+import { createUser, findUserByEmail, updateUser } from "./db/queries/users.js";
 import { NextFunction, Request, Response } from "express";
 import { BadRequestError } from "./app/customError.js";
 import { getBearerToken, hashPassword, validateJWT } from "./auth.js";
@@ -38,13 +38,23 @@ const updateUserHandler = async (req: Request, res: Response) => {
   const params: parameters = req.body;
   if (!params.email || !params.password) {
     res.status(401).send("Missing required fields");
+    return;
   }
 
   try {
     const accessToken = getBearerToken(req);
     const userId = validateJWT(accessToken, envOrThrow("SECRET"));
-    const user = findUserByEmail(params.email);
-  } catch (err) {}
+    const user = await findUserByEmail(params.email);
+
+    if (user.id !== userId) {
+      res.status(401).send("Unauthorized user");
+    }
+
+    const hashedPass = await hashPassword(params.password);
+    await updateUser(params.email, hashedPass);
+  } catch (err) {
+    res.status(401).send("Cannot update user password and email");
+  }
 };
 
 export { createUserHandler };
