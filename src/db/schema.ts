@@ -48,9 +48,14 @@ export const refresh_tokens = pgTable(
   {
     token: varchar("token", { length: 256 }).primaryKey(),
     createdAt: timestamp("created_at").notNull().defaultNow(),
-    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at")
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
     userId: uuid("user_id").notNull(),
-    expiresAt: timestamp("expires_at").notNull(),
+    expiresAt: timestamp("expires_at")
+      .notNull()
+      .$defaultFn(() => new Date(new Date().getTime() + 60 * 24 * 60 * 60)),
     revokedAt: timestamp("revoked_at"),
   },
   (table) => ({
@@ -60,3 +65,5 @@ export const refresh_tokens = pgTable(
     }).onDelete("cascade"),
   }),
 );
+
+export type NewRefreshToken = typeof refresh_tokens.$inferInsert;
