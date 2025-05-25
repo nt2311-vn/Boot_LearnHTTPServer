@@ -18,8 +18,13 @@ export const webhookHandler = async (req: Request, res: Response) => {
 
   switch (params.event) {
     case "user.upgraded": {
-      await updateRedMember(params.data.userId);
-      res.status(201).send("ok");
+      const user = await updateRedMember(params.data.userId);
+      if (!user) {
+        res.status(404).send("not found");
+        return;
+      }
+
+      res.status(204);
       return;
     }
     default:
