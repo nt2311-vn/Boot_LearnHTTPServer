@@ -24,6 +24,7 @@ export async function findUserByEmail(email: string) {
       createdAt: users.createdAt,
       updatedAt: users.updatedAt,
       hashed_password: users.hashed_password,
+      isChirpyRed: users.isChirpyRed,
     })
     .from(users)
     .where(eq(users.email, email));
