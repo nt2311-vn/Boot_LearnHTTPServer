@@ -71,6 +71,7 @@ export const handlerLogin = async (req: Request, res: Response) => {
     updatedAt: user.updatedAt,
     token: accessToken,
     refreshToken: refreshToken,
+    isChirpyRed: user.isChirpyRed,
   });
 };
 

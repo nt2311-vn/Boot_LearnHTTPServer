@@ -53,6 +53,7 @@ export const updateUserHandler = async (req: Request, res: Response) => {
       createdAt: updatedUser.createdAt,
       updatedAt: updatedUser.createdAt,
       email: updatedUser.email,
+      isChirpyRed: updatedUser.isChirpyRed,
     });
   } catch (err) {
     res.status(401).send("Cannot update user password and email");

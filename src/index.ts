@@ -27,6 +27,7 @@ import {
   postRefreshToken,
   revokeToken,
 } from "./auth.js";
+import { webhookHandler } from "./polkaWebHookController.js";
 
 const migrationClient = postgres(config.db.url, { max: 1 });
 await migrate(drizzle(migrationClient), config.db.migrationConfig);
@@ -69,6 +70,10 @@ app.post("/api/refresh", (req, res, next) => {
 
 app.post("/api/revoke", (req, res, next) => {
   Promise.resolve(revokeToken(req, res)).catch(next);
+});
+
+app.post("/api/polka/webhooks", (req, res, next) => {
+  Promise.resolve(webhookHandler(req, res)).catch(next);
 });
 
 app.listen(config.api.port, () => {
