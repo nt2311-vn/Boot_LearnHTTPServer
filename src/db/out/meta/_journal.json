@@ -36,6 +36,13 @@
       "when": 1748052856373,
       "tag": "0004_stale_nomad",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1748136804320,
+      "tag": "0005_brown_lester",
+      "breakpoints": true
     }
   ]
 }
