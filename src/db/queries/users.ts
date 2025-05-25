@@ -44,3 +44,15 @@ export const updateUser = async (
 
   return user;
 };
+
+export const updateRedMember = async (userID: string) => {
+  const rows = await db
+    .update(users)
+    .set({ isChirpyRed: true })
+    .where(eq(users.id, userID))
+    .returning();
+
+  if (rows.length === 0) {
+    throw new Error("Cannot upgrade user to red");
+  }
+};

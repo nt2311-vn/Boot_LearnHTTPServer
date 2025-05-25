@@ -1,4 +1,5 @@
 import {
+  boolean,
   foreignKey,
   pgTable,
   timestamp,
@@ -17,6 +18,7 @@ export const users = pgTable("users", {
   hashed_password: varchar("hashed_password", { length: 256 })
     .notNull()
     .default("unset"),
+  isChirpyRed: boolean().default(false),
 });
 
 export type NewUser = typeof users.$inferInsert;
