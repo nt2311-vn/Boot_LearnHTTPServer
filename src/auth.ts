@@ -149,3 +149,22 @@ export const revokeToken = async (req: Request, res: Response) => {
   await updateRevokeToken(token);
   res.status(204).send();
 };
+
+export const getAPIKey = (req: Request) => {
+  const authHeader = req.get("authorization");
+  if (!authHeader) {
+    throw new BadRequestError("no authorization in header");
+  }
+
+  const splitKey = authHeader.split(" ");
+  if (splitKey.length !== 2) {
+    throw new BadRequestError("provided key not in proper format");
+  }
+
+  const preFix = splitKey[0];
+  if (preFix.toLowerCase() !== "apikey") {
+    throw new BadRequestError("provided key not in proper format");
+  }
+
+  return splitKey[1];
+};

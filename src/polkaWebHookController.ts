@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
 import { updateRedMember } from "./db/queries/users.js";
+import { getAPIKey } from "./auth.js";
+import { envOrThrow } from "./config.js";
 
 export const webhookHandler = async (req: Request, res: Response) => {
   type parameters = {
@@ -16,6 +18,12 @@ export const webhookHandler = async (req: Request, res: Response) => {
     return;
   }
 
+  const apiKey = getAPIKey(req);
+  if (apiKey !== envOrThrow("POLKA_KEY")) {
+    res.status(401).send("incorrect api key");
+    return;
+  }
+
   switch (params.event) {
     case "user.upgraded": {
       const user = await updateRedMember(params.data.userId);
@@ -24,11 +32,10 @@ export const webhookHandler = async (req: Request, res: Response) => {
         return;
       }
 
-      res.status(204);
+      res.status(204).end();
       return;
     }
     default:
-      res.status(204).send("ok");
-      return;
+      res.status(204).end();
   }
 };
