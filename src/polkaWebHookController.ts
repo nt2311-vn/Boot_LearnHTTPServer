@@ -18,24 +18,28 @@ export const webhookHandler = async (req: Request, res: Response) => {
     return;
   }
 
-  const apiKey = getAPIKey(req);
-  if (apiKey !== envOrThrow("POLKA_KEY")) {
-    res.status(401).send("incorrect api key");
-    return;
-  }
-
-  switch (params.event) {
-    case "user.upgraded": {
-      const user = await updateRedMember(params.data.userId);
-      if (!user) {
-        res.status(404).send("not found");
-        return;
-      }
-
-      res.status(204).end();
+  try {
+    const apiKey = getAPIKey(req);
+    if (apiKey !== envOrThrow("POLKA_KEY")) {
+      res.status(401).send("incorrect api key");
       return;
     }
-    default:
-      res.status(204).end();
+
+    switch (params.event) {
+      case "user.upgraded": {
+        const user = await updateRedMember(params.data.userId);
+        if (!user) {
+          res.status(404).send("not found");
+          return;
+        }
+
+        res.status(204).end();
+        return;
+      }
+      default:
+        res.status(204).end();
+    }
+  } catch (err) {
+    res.status(401).send("unauthorized");
   }
 };
