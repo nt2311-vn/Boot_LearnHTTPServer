@@ -41,6 +41,20 @@ export const retrieveChirpById = async (chirpID: string) => {
   return result;
 };
 
+export const retriveAllChirp = async () => {
+  const results = await db.select({ body: chirps.body }).from(chirps);
+  return results;
+};
+
+export const retriveChirpByAuthorId = async (authorId: string) => {
+  const results = await db
+    .select({ body: chirps.body })
+    .from(chirps)
+    .where(eq(chirps.userId, authorId));
+
+  return results;
+};
+
 export const deleteChirp = async (chirpID: string) => {
   await db.delete(chirps).where(eq(chirps.id, chirpID));
 };
