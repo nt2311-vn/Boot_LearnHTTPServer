@@ -48,7 +48,13 @@ export const retriveAllChirp = async () => {
 
 export const retriveChirpByAuthorId = async (authorId: string) => {
   const results = await db
-    .select({ body: chirps.body })
+    .select({
+      id: chirps.id,
+      createdAt: chirps.createdAt,
+      updatedAt: chirps.updatedAt,
+      body: chirps.body,
+      userId: chirps.userId,
+    })
     .from(chirps)
     .where(eq(chirps.userId, authorId));
 

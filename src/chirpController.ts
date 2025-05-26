@@ -34,11 +34,37 @@ export const createChirpHandler = async (req: Request, res: Response) => {
   }
 };
 
+type SortValue = "asc" | "desc";
+type Chirp = {
+  id: string;
+  createdAt: Date;
+  updatedAt: Date;
+  body: string;
+  userId: string;
+};
+
+const sortedChirp = (chirps: Chirp[], sortValue?: SortValue) => {
+  if (sortValue === "desc") {
+    return chirps.sort(
+      (chirp1, chirp2) =>
+        new Date(chirp2.createdAt).getTime() -
+        new Date(chirp1.createdAt).getTime(),
+    );
+  }
+
+  return chirps.sort(
+    (chirp1, chirp2) =>
+      new Date(chirp1.createdAt).getTime() -
+      new Date(chirp2.createdAt).getTime(),
+  );
+};
+
 export const getChirpsHandler = async (req: Request, res: Response) => {
-  const { authorId } = req.query;
+  const { authorId, sort } = req.query;
   if (!authorId) {
     const chirps = await retrieveChirps();
-    res.status(200).json(chirps);
+    const sorted = sortedChirp(chirps, sort as SortValue);
+    res.status(200).json(sorted);
     return;
   }
 
@@ -47,7 +73,8 @@ export const getChirpsHandler = async (req: Request, res: Response) => {
   }
 
   const chirps = await retriveChirpByAuthorId(authorId);
-  res.status(200).json(chirps);
+  const sorted = sortedChirp(chirps, sort as SortValue);
+  res.status(200).json(sorted);
   return;
 };
 
