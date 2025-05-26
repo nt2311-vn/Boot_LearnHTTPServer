@@ -9,6 +9,8 @@ import {
   deleteChirp,
   retrieveChirpById,
   retrieveChirps,
+  retriveAllChirp,
+  retriveChirpByAuthorId,
 } from "./db/queries/chirps.js";
 import { getBearerToken, validateJWT } from "./auth.js";
 import { envOrThrow } from "./config.js";
@@ -32,14 +34,21 @@ export const createChirpHandler = async (req: Request, res: Response) => {
   }
 };
 
-export const getChirpsHandler = async (_: Request, res: Response) => {
-  const chirps = await retrieveChirps();
-
-  if (!chirps) {
-    throw new Error("Cannot create chirp");
+export const getChirpsHandler = async (req: Request, res: Response) => {
+  const { authorId } = req.query;
+  if (!authorId) {
+    const chirps = await retrieveChirps();
+    res.status(200).json(chirps);
+    return;
   }
 
+  if (typeof authorId !== "string") {
+    throw new BadRequestError("AuthorId must be an UUID");
+  }
+
+  const chirps = await retriveChirpByAuthorId(authorId);
   res.status(200).json(chirps);
+  return;
 };
 
 export const getChirpByIdHandler = async (req: Request, res: Response) => {
